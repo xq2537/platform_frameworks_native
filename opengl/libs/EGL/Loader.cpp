@@ -69,13 +69,16 @@ checkGlesEmulationStatus(void)
     char  prop[PROPERTY_VALUE_MAX];
     int   result = -1;
 
+#if 0
     /* First, check for qemu=1 */
     property_get("ro.kernel.qemu",prop,"0");
     if (atoi(prop) != 1)
         return -1;
+#endif
 
     /* We are in the emulator, get GPU status value */
-    property_get("ro.kernel.qemu.gles",prop,"0");
+    //property_get("ro.kernel.qemu.gles",prop,"0");
+    property_get("androVM.gles",prop,"0");
     return atoi(prop);
 }
 

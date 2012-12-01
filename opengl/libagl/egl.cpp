@@ -1448,10 +1448,14 @@ EGLBoolean eglChooseConfig( EGLDisplay dpy, const EGLint *attrib_list,
                             EGLConfig *configs, EGLint config_size,
                             EGLint *num_config)
 {
-    if (egl_display_t::is_valid(dpy) == EGL_FALSE)
+    ALOGE("eglChooseConfig()");
+    if (egl_display_t::is_valid(dpy) == EGL_FALSE) {
+        ALOGE("eglChooseConfig() - error in display");
         return setError(EGL_BAD_DISPLAY, EGL_FALSE);
+    }
     
     if (ggl_unlikely(num_config==0)) {
+        ALOGE("eglChooseConfig() - no config");
         return setError(EGL_BAD_PARAMETER, EGL_FALSE);
     }
 
@@ -1461,6 +1465,7 @@ EGLBoolean eglChooseConfig( EGLDisplay dpy, const EGLint *attrib_list,
          * one (terminated with EGL_NONE) as defined in
          * section 3.4.1 "Querying Configurations" in the EGL specification.
          */
+        ALOGE("eglChooseConfig() - NULL attrib_list");
         static const EGLint dummy = EGL_NONE;
         attrib_list = &dummy;
     }
@@ -1468,10 +1473,12 @@ EGLBoolean eglChooseConfig( EGLDisplay dpy, const EGLint *attrib_list,
     int numAttributes = 0;
     int numConfigs =  NELEM(gConfigs);
     uint32_t possibleMatch = (1<<numConfigs)-1;
+    ALOGE("eglChooseConfig() - numConfigs = %d possibleMatch=%X", numConfigs, possibleMatch);
     while(possibleMatch && *attrib_list != EGL_NONE) {
         numAttributes++;
         EGLint attr = *attrib_list++;
         EGLint val  = *attrib_list++;
+        ALOGE("eglChooseConfig() - attr=%d val=%d", attr, val);
         for (int i=0 ; possibleMatch && i<numConfigs ; i++) {
             if (!(possibleMatch & (1<<i)))
                 continue;
@@ -1480,6 +1487,7 @@ EGLBoolean eglChooseConfig( EGLDisplay dpy, const EGLint *attrib_list,
             }
         }
     }
+    ALOGE("eglChooseConfig() - possibleMatch is now %X", possibleMatch);
 
     // now, handle the attributes which have a useful default value
     for (size_t j=0 ; possibleMatch && j<NELEM(config_defaults) ; j++) {
@@ -1502,6 +1510,7 @@ EGLBoolean eglChooseConfig( EGLDisplay dpy, const EGLint *attrib_list,
             }
         }
     }
+    ALOGE("eglChooseConfig() - and finally possibleMatch=%X", possibleMatch);
 
     // return the configurations found
     int n=0;
@@ -1523,6 +1532,7 @@ EGLBoolean eglChooseConfig( EGLDisplay dpy, const EGLint *attrib_list,
         }
     }
     *num_config = n;
+    ALOGE("eglChooseConfig() - num_config = %d", n);
      return EGL_TRUE;
 }
 

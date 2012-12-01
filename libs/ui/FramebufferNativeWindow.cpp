@@ -263,6 +263,13 @@ int FramebufferNativeWindow::queueBuffer(ANativeWindow* window,
     return res;
 }
 
+void FramebufferNativeWindow::setOrientation(int orientation)
+{
+    ALOGE("setOrientation with fbDev=%p fbDev->setOrientation=%p orientation=%d\n", fbDev, fbDev->setOrientation, orientation);
+    if (fbDev && fbDev->setOrientation)
+        fbDev->setOrientation(fbDev, orientation);
+}
+
 int FramebufferNativeWindow::query(const ANativeWindow* window,
         int what, int* value) 
 {

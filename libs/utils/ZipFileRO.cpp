@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 #if HAVE_PRINTF_ZD
 #  define ZD "%zd"
@@ -118,7 +119,7 @@ ZipFileRO::~ZipFileRO() {
  */
 int ZipFileRO::entryToIndex(const ZipEntryRO entry) const
 {
-    long ent = ((long) entry) - kZipEntryAdj;
+    uintptr_t ent = ((uintptr_t) entry) - kZipEntryAdj;
     if (ent < 0 || ent >= mHashTableSize || mHashTable[ent].name == NULL) {
         ALOGW("Invalid ZipEntryRO %p (%ld)\n", entry, ent);
         return -1;

@@ -56,6 +56,8 @@ public:
     status_t setUpdateRectangle(const Rect& updateRect);
     status_t compositionComplete();
 
+    void setOrientation(int);
+
     void dump(String8& result);
 
     // for debugging only

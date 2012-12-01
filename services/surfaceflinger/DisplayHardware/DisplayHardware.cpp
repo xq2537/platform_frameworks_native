@@ -397,6 +397,12 @@ void DisplayHardware::fini()
     eglTerminate(mDisplay);
 }
 
+void DisplayHardware::setOrientation(int orientation) const 
+{
+    ALOGE("setOrientation orientation=%d\n", orientation);
+    mNativeWindow->setOrientation(orientation);
+}
+
 void DisplayHardware::releaseScreen() const
 {
     DisplayHardwareBase::releaseScreen();
