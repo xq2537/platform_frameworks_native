@@ -148,10 +148,33 @@ static status_t selectConfigForPixelFormat(
 
 void DisplayHardware::init(uint32_t dpy)
 {
+    char property_androVM_gles[PROPERTY_VALUE_MAX];
+    int is_androVM_gles = 0;
+
+    if ((property_get("androVM.gles", property_androVM_gles, NULL) > 0) && (atoi(property_androVM_gles)>0))
+        is_androVM_gles = 1;
+
     mNativeWindow = new FramebufferNativeWindow();
     framebuffer_device_t const * fbDev = mNativeWindow->getDevice();
     if (!fbDev) {
         ALOGE("Display subsystem failed to initialize. check logs. exiting...");
+        if (is_androVM_gles) {
+            char property_androVM_gles_tries[PROPERTY_VALUE_MAX];
+            char exec_set[64+PROPERTY_VALUE_MAX];
+            int androVM_gles_tries = 0;
+
+            ALOGE("We run AndroVM Hardware OpenGL, let's see if we have to switch to Software rendering berfore exiting...");
+            if (property_get("androVM.gles.tries", property_androVM_gles_tries, NULL) > 0)
+                androVM_gles_tries = atoi(property_androVM_gles_tries);
+            sprintf(exec_set, "/system/bin/androVM_setprop androVM.gles.tries %d", ++androVM_gles_tries);
+            system(exec_set);
+            if (androVM_gles_tries > 10) {
+                ALOGE("Switching to AndroVM Software OpenGL...");
+                system("/system/bin/androVM_setprop androVM.gles 0");
+                system("/system/bin/androVM_setprop androVM.gles.renderer 0");
+                system("/system/bin/setdpi `getprop androVM.vbox_dpi`");
+            }
+        }
         exit(0);
     }
 
