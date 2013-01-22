@@ -154,27 +154,30 @@ void DisplayHardware::init(uint32_t dpy)
     if ((property_get("androVM.gles", property_androVM_gles, NULL) > 0) && (atoi(property_androVM_gles)>0))
         is_androVM_gles = 1;
 
+    if (is_androVM_gles) {
+        char property_androVM_gles_first_try[PROPERTY_VALUE_MAX];
+        time_t androVM_gles_first_try = 0;
+        char exec_set[64+PROPERTY_VALUE_MAX];
+        time_t current_time = time(NULL);
+
+        if (property_get("androVM.gles.first_try", property_androVM_gles_first_try, NULL) > 0)
+            androVM_gles_first_try = atoi(property_androVM_gles_first_try);
+        if (!androVM_gles_first_try) {
+            sprintf(exec_set, "/system/bin/androVM_setprop androVM.gles.first_try %u", current_time);
+            system(exec_set);
+        }
+        else if ((current_time - androVM_gles_first_try) > 60) {
+            ALOGE("Switching to AndroVM Software OpenGL...");
+            system("/system/bin/androVM_setprop androVM.gles 0");
+            system("/system/bin/androVM_setprop androVM.gles.renderer 0");
+            system("/system/bin/setdpi `getprop androVM.vbox_dpi`");
+            exit(0);
+        }
+    }
+
     mNativeWindow = new FramebufferNativeWindow();
     framebuffer_device_t const * fbDev = mNativeWindow->getDevice();
     if (!fbDev) {
-        ALOGE("Display subsystem failed to initialize. check logs. exiting...");
-        if (is_androVM_gles) {
-            char property_androVM_gles_tries[PROPERTY_VALUE_MAX];
-            char exec_set[64+PROPERTY_VALUE_MAX];
-            int androVM_gles_tries = 0;
-
-            ALOGE("We run AndroVM Hardware OpenGL, let's see if we have to switch to Software rendering berfore exiting...");
-            if (property_get("androVM.gles.tries", property_androVM_gles_tries, NULL) > 0)
-                androVM_gles_tries = atoi(property_androVM_gles_tries);
-            sprintf(exec_set, "/system/bin/androVM_setprop androVM.gles.tries %d", ++androVM_gles_tries);
-            system(exec_set);
-            if (androVM_gles_tries > 10) {
-                ALOGE("Switching to AndroVM Software OpenGL...");
-                system("/system/bin/androVM_setprop androVM.gles 0");
-                system("/system/bin/androVM_setprop androVM.gles.renderer 0");
-                system("/system/bin/setdpi `getprop androVM.vbox_dpi`");
-            }
-        }
         exit(0);
     }
 
@@ -374,6 +377,9 @@ void DisplayHardware::init(uint32_t dpy)
     if (mHwc->initCheck() == NO_ERROR) {
         mHwc->setFrameBuffer(mDisplay, mSurface);
     }
+
+    if (is_androVM_gles)
+       system("/system/bin/androVM_setprop androVM.gles.first_try 0");
 }
 
 void DisplayHardware::setVSyncHandler(const sp<VSyncHandler>& handler) {
